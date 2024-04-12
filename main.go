@@ -20,6 +20,7 @@ func main() {
 	books = append(books, Book{Id: 1, Title: "Bubble", Author: "Bubble Crown"})
 	app.Get("/books", getAllBooks)
 	app.Get("/books/:id", getBook)
+	app.Post("/books", createBook)
 	app.Listen(":8080")
 }
 
@@ -38,4 +39,18 @@ func getBook(c *fiber.Ctx) error {
 		}
 	}
 	return c.Status(fiber.StatusNotFound).SendString("The book does not exist")
+}
+
+func createBook(c *fiber.Ctx) error {
+	book := new(Book) // same as *Book, don't need to use &
+	if err := c.BodyParser(book); err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+	}
+	for _, b := range books {
+		if b.Id == book.Id || b.Title == book.Title {
+			return c.Status(fiber.StatusBadRequest).SendString("The id is already in use.")
+		}
+	}
+	books = append(books, *book)
+	return c.JSON(book)
 }
